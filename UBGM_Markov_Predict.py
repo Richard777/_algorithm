@@ -254,21 +254,3 @@ ret = []
 predict(history_data, m, ret)
 print('经无偏灰色马尔科夫模型预测结果(往后', m, '项)：')
 print(ret)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
