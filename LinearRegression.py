@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 Linear regression
-batch Gradient descent
+Batch Gradient descent
+Stochastic gradient descent or Incremental gradient descent
 Least square method
 
 X: n 维特征
@@ -52,8 +53,9 @@ def LR(train_data=[], speed=0.001, threshold=0.001):
 
     A = np.zeros([n + 1, 1])  # 待估参数,初始化为参数为0向量
     if n <= 10000:  # 当维数不超过10000时，求逆矩阵较快，选择使用最小二乘法
+        print('use least square method to get optimal solution')
         A = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(Y)
-    else:  # 特征维数超过10000时，梯度下降法更快
+    else:  # 特征维数超过10000时，如果训练集不是很大，可以采用批量梯度下降法，比正规方程组速度快，而且比增量梯度下降精确度高
         old_square_sum = 0
         for i in range(m):
             y_pre = 0
@@ -64,17 +66,29 @@ def LR(train_data=[], speed=0.001, threshold=0.001):
 
         count = 0  # 计数，收敛次数
         while True:
-            bias_y = [None for i in range(m)]  # 当参数为A时，预测值与实际值的差值列表
-            for i in range(n + 1):
-                bias_sum = 0
+            if m > 100000:  # 特征维数超过10000时，如果训练集很大，可以采用增量梯度下降法，比正规方程组和批量梯度下降速度快，而且精确度损失也不严重
+                print('use incremental gradient descent to get optimal solution')
+                y_pre = 0
+                for k in range(n + 1):
+                    y_pre += (A[k][0] * X[count % m][k])
+                bias_y = y_pre - Y[count % m][0]
+                # 注意：同步更新参数
+                for i in range(n + 1):
+                    A[i][0] -= speed * (bias_y * X[count % m][i])
+            else:  # 特征维数超过10000时，如果训练集不是很大，可以采用批量梯度下降法，比正规方程组速度快，而且比增量梯度下降精确度高
+                print('use batch gradient descent to get optimal solution')
+                bias_y = [0 for i in range(m)]  # 当参数为A时，预测值与实际值的差值列表
                 for j in range(m):
-                    if bias_y[j] is None:
-                        y_pre = 0
-                        for k in range(n + 1):
-                            y_pre += (A[k][0] * X[j][k])
-                        bias_y[j] = y_pre - Y[j][0]
-                    bias_sum += bias_y[j] * X[j][i]
-                A[i][0] -= speed * bias_sum
+                    y_pre = 0
+                    for k in range(n + 1):
+                        y_pre += (A[k][0] * X[j][k])
+                    bias_y[j] = y_pre - Y[j][0]
+                # 注意：同步更新参数
+                for i in range(n + 1):
+                    bias_sum = 0
+                    for j in range(m):
+                        bias_sum += bias_y[j] * X[j][i]
+                    A[i][0] -= speed * bias_sum
             # print(A)
 
             square_sum = 0
